@@ -1,0 +1,10 @@
+{ "name": "dna"
+, "version": "0.0.1"
+, "main": "./dna.js"
+, "engines": { "node" : "*" }  
+
+, "author": "SHIN Suzuki <shinout310@gmail.com>"
+, "description": "utility functions to handle DNA/RNA string data"
+
+, "tags": ["DNA", "RNA", "FASTA", "sequence", "bioinformatics"]
+}
