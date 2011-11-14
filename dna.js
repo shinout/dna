@@ -142,9 +142,16 @@ dna.getChromCode = function(name) {
  * get possible rnames from the code
  *
  * 9  -> [9, chr9, Chr9, CHR9, chrom9, Chrom9, CHROM9]
+ *
+ * @param (string or number) code : chromosome code or chromosome name
+ * @param (function) fn: function with its arguments each rname canditate.
+ *                       returns some value when rname is valid,
+ *                       returns false when invalid.
+ *                       if this argument is set,
+ *                       getChromList returns the value fn returns.
  **/
 
-dna.getChromList = function(code, options) {
+dna.getChromList = function(code, fn) {
   var name = dna.CHROM_NAMES[code];
   if (!name) {
     name = dna.CHROM_NAMES[dna.getChromCode(code)];
@@ -153,13 +160,26 @@ dna.getChromList = function(code, options) {
     }
   }
 
-  return [name,
+  var list = [name,
           "chr" + name,
           "Chr" + name, 
           "CHR" + name, 
           "chrom" + name, 
           "Chrom" + name, 
           "CHROM" + name ];
+
+  if (typeof fn != "function") {
+    return list;
+  }
+
+  var ret = false;
+
+  for (var i=0, l=list.length; i<l; i++) {
+    ret = fn(list[i]);
+    if (ret) break;
+  }
+
+  return ret;
 };
 
 
