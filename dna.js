@@ -76,6 +76,10 @@ dna.getRandomFragment = function(len, rna) {
   return fragment;
 }
 
+
+/**
+ * the codes of chromosome
+ **/
 dna.CHROM_CODES = {
   X : 23,
   Y : 24,
@@ -88,6 +92,11 @@ for (var i=1; i<=22; i++) {
 
 Object.freeze(dna.CHROM_CODES);
 
+
+
+/**
+ * code => chromosome name
+ **/
 dna.CHROM_NAMES = Object.keys(dna.CHROM_CODES).reduce(function(ret, name) {
   var code = dna.CHROM_CODES[name];
   ret[code] = name;
@@ -95,6 +104,8 @@ dna.CHROM_NAMES = Object.keys(dna.CHROM_CODES).reduce(function(ret, name) {
 }, {});
 
 Object.freeze(dna.CHROM_NAMES);
+
+
 
 /**
  *
@@ -111,6 +122,10 @@ Object.freeze(dna.CHROM_NAMES);
  * others: -> throw exception
  **/
 dna.getChromCode = function(name) {
+  if (typeof name == "number") {
+    return name;
+  }
+
   name = name.toString();
   if (name.toLowerCase().indexOf("chr") == 0) {
     name = name.slice(3);
@@ -119,5 +134,35 @@ dna.getChromCode = function(name) {
   if (!ret) throw new Error("chromosome not found");
   return ret;
 };
+
+/**
+ *
+ * getChromList
+ * 
+ * get possible rnames from the code
+ *
+ * 9  -> [9, chr9, Chr9, CHR9, chrom9, Chrom9, CHROM9]
+ **/
+
+dna.getChromList = function(code, options) {
+  var name = dna.CHROM_NAMES[code];
+  if (!name) {
+    name = dna.CHROM_NAMES[dna.getChromCode(code)];
+    if (!name) {
+      throw new Error("code must be number");
+    }
+  }
+
+  return [name,
+          "chr" + name,
+          "Chr" + name, 
+          "CHR" + name, 
+          "chrom" + name, 
+          "Chrom" + name, 
+          "CHROM" + name ];
+};
+
+
+
 
 module.exports = dna;
