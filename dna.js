@@ -1,3 +1,5 @@
+var dna = {};
+
 /**
  * complStrand
  * make a complementary strand of str
@@ -6,7 +8,7 @@
  * @param boolean rna: if true, T -> U . default: false.
  * @return string : complementary DNA sequence
  */
-module.exports.complStrand = function(str, rev, rna) {
+dna.complStrand = function(str, rev, rna) {
   var ret = [];
   var i = 0;
   str.split('').forEach(function(c) {
@@ -54,7 +56,7 @@ module.exports.complStrand = function(str, rev, rna) {
  * @param number  len  : fragment length
  * @return string : DNA fragment
  */
-module.exports.getRandomFragment = function(len, rna) {
+dna.getRandomFragment = function(len, rna) {
   var fragment = '';
   for (var i=0; i<len; i++) {
     var p = Math.random();
@@ -74,3 +76,48 @@ module.exports.getRandomFragment = function(len, rna) {
   return fragment;
 }
 
+dna.CHROM_CODES = {
+  X : 23,
+  Y : 24,
+  M : 25
+};
+
+for (var i=1; i<=22; i++) {
+  dna.CHROM_CODES[i] = i;
+}
+
+Object.freeze(dna.CHROM_CODES);
+
+dna.CHROM_NAMES = Object.keys(dna.CHROM_CODES).reduce(function(ret, name) {
+  var code = dna.CHROM_CODES[name];
+  ret[code] = name;
+  return ret;
+}, {});
+
+Object.freeze(dna.CHROM_NAMES);
+
+/**
+ *
+ * getChromCode
+ * 
+ * get the code (id) of a given chromosome
+ *
+ * chr9  -> 9
+ * chr22 -> 22
+ * chrX  -> 23
+ * chrY  -> 24
+ * chrM  -> 25
+ *
+ * others: -> throw exception
+ **/
+dna.getChromCode = function(name) {
+  name = name.toString();
+  if (name.toLowerCase().indexOf("chr") == 0) {
+    name = name.slice(3);
+  }
+  var ret = dna.CHROM_CODES[name.toUpperCase()];
+  if (!ret) throw new Error("chromosome not found");
+  return ret;
+};
+
+module.exports = dna;
