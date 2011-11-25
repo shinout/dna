@@ -183,6 +183,71 @@ dna.getChromList = function(code, fn) {
 };
 
 
+/**
+ * 0-based coordinate to 1-based coordinate
+ **/
+dna.getPosLen = function(start, end) {
+  start = dna.numberize(start, "start");
+  end   = dna.numberize(end, "end");
+  var len = end - start;
+  var pos = start + 1;
 
+  if (pos <= 0) {
+    throw new Error('pos must be larger than 0. start: ' + start + ', end: ' + end);
+  }
+  if (len <= 0) {
+    throw new Error('length must be larger than 0. start: ' + start + ', end: ' + end);
+  }
+  return [pos, len];
+};
+
+
+/**
+ * 1-based coordinate to 0-based coordinate
+ **/
+dna.getStartEnd = function(pos, len) {
+  pos = dna.numberize(pos, "pos");
+  len = dna.numberize(len, "len");
+  var start = pos - 1;
+  var end   = start + len;
+
+  if (start < 0) {
+    throw new Error('start must be greater than 0 or 0. pos: ' + pos + ', len: ' + len);
+  }
+  if (end <= start) {
+    throw new Error('end must be less than start. pos: ' + pos + ', len: ' + len);
+  }
+  return [start, end];
+};
+
+
+/**
+ * numberize n. If NaN, throw error or set default
+ **/
+dna.numberize = function() {
+  var n = Array.prototype.shift.call(arguments);
+  var _default, name;
+
+  Array.prototype.forEach.call(arguments, function(v) {
+    if (typeof v == 'number') {
+      _default = v;
+    }
+    else if (typeof v == 'string') {
+      name = v;
+    }
+    return v;
+  });
+
+  var ret = Number(n);
+  if (isNaN(n)) {
+    if (_default == undefined) {
+      throw new Error((name ? name : n) + ' is NaN.');
+    }
+    else {
+      return _default;
+    }
+  }
+  return ret;
+};
 
 module.exports = dna;
