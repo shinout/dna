@@ -120,18 +120,33 @@ Object.freeze(dna.CHROM_NAMES);
  * chrM  -> 25
  *
  * others: -> throw exception
+ *
+ * @param name     : name of a chromosome
+ * @param alphabet : if true, chrX -> X, chrY -> Y, chrM -> M
  **/
-dna.getChromCode = function(name) {
-  if (typeof name == "number") {
-    return name;
+dna.getChromCode = function(name, alphabet) {
+  name = name.toString();
+  var i = name.length;
+  var rawCode = '';
+  while (--i >= 0) {
+    var ch = name.charAt(i);
+    if (isNaN(Number(ch))) {
+      if (!rawCode) {
+        rawCode = ch;
+      }
+      break;
+    }
+    rawCode = ch + rawCode;
   }
 
-  name = name.toString();
-  if (name.toLowerCase().indexOf("chr") == 0) {
-    name = name.slice(3);
+  var ret = dna.CHROM_CODES[rawCode.toUpperCase()];
+  if (!ret) {
+    throw new Error("chromosome not found");
   }
-  var ret = dna.CHROM_CODES[name.toUpperCase()];
-  if (!ret) throw new Error("chromosome not found");
+  if (alphabet) {
+    return dna.CHROM_NAMES[ret];
+  var ret = dna.CHROM_CODES[rawCode.toUpperCase()];
+  }
   return ret;
 };
 
