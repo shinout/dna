@@ -31,6 +31,8 @@ poslen_cases.forEach(function(c) {
  * getChromCode
  **/
 console.assert(22, dna.getChromCode("chromosome22"));
-console.assert(23, dna.getChromCode("cX"));
-console.assert(23, dna.getChromCode("foobarX"));
+console.assert(23, dna.getChromCode("CHRX"));
+console.assert(23, dna.getChromCode("CHROMX"));
+console.assert(40, dna.getChromCode("chrUn_gl000222"));
+console.assert(40, dna.getChromCode("ChrUn_GL000222"));
 console.assert('X', dna.getChromCode("chrX", true));
