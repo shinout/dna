@@ -36,3 +36,14 @@ console.assert(23, dna.getChromCode("CHROMX"));
 console.assert(40, dna.getChromCode("chrUn_gl000222"));
 console.assert(40, dna.getChromCode("ChrUn_GL000222"));
 console.assert('X', dna.getChromCode("chrX", true));
+
+/**
+ * getRegularName
+ **/
+console.assert('chrX', dna.getRegularName("chrx"));
+console.assert('chrX', dna.getRegularName("x"));
+console.assert('chrX', dna.getRegularName("CHROMOSOME X"));
+console.assert('chr21', dna.getRegularName("chrom 21"));
+console.assert('chr21', dna.getRegularName("c h r o m 21"));
+
+

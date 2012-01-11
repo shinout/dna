@@ -192,7 +192,7 @@ Object.freeze(dna.CHROM_CODES);
  * @param alphabet : if true, chrX -> X, chrY -> Y, chrM -> M (returns name without "chr")
  **/
 dna.getChromCode = function(name, alphabet) {
-  name = name.toString().toLowerCase();
+  name = name.toString().split(/[ \t]+/g).join('').toLowerCase();
   var i = name.length;
   if (name.slice(0,3) != 'chr') {
     name = 'chr' + name;
@@ -210,6 +210,24 @@ dna.getChromCode = function(name, alphabet) {
   }
   return (alphabet) ? dna.CHROM_NAMES[ret].slice(3) : ret;
 };
+
+/**
+ *
+ * getRegularName
+ * 
+ * get the canonical names of a given chromosome
+ *
+ * 9  -> chr9
+ * chromosome22 -> chr22
+ * CHRUN_GN000239 -> chrUn_gl000239
+ * others: -> throw exception
+ *
+ * @param name     : name of a chromosome
+ **/
+dna.getRegularName = function(name) {
+  return dna.CHROM_NAMES[dna.getChromCode(name)];
+};
+
 
 /**
  *
