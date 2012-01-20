@@ -189,9 +189,9 @@ Object.freeze(dna.CHROM_CODES);
  * others: -> throw exception
  *
  * @param name     : name of a chromosome
- * @param alphabet : if true, chrX -> X, chrY -> Y, chrM -> M (returns name without "chr")
+ * @param nothrow  : if true and not found, returns the original value
  **/
-dna.getChromCode = function(name, alphabet) {
+dna.getChromCode = function(name, nothrow) {
   name = name.toString().split(/[ \t]+/g).join('').toLowerCase();
   var i = name.length;
   if (name.slice(0,3) != 'chr') {
@@ -206,9 +206,11 @@ dna.getChromCode = function(name, alphabet) {
 
   var ret = dna.CHROM_CODES[name];
   if (!ret) {
+    if (nothrow) return name;
+
     throw new Error("unknown chromosome name : " + name);
   }
-  return (alphabet) ? dna.CHROM_NAMES[ret].slice(3) : ret;
+  return ret;
 };
 
 /**
@@ -238,7 +240,7 @@ dna.getRegularName = function(name) {
  * 9  -> [9, chr9, Chr9, CHR9, chrom9, Chrom9, CHROM9]
  *
  * @param (string or number) code : chromosome code or chromosome name
- * @param (function) fn: function with its arguments each rname canditate.
+ * @param (function) fn: function with its arguments each rname candidate.
  *                       returns some value when rname is valid,
  *                       returns false when invalid.
  *                       if this argument is set,

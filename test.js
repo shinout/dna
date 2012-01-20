@@ -35,7 +35,7 @@ console.assert(23, dna.getChromCode("CHRX"));
 console.assert(23, dna.getChromCode("CHROMX"));
 console.assert(40, dna.getChromCode("chrUn_gl000222"));
 console.assert(40, dna.getChromCode("ChrUn_GL000222"));
-console.assert('X', dna.getChromCode("chrX", true));
+console.assert('chr12-afsd', dna.getChromCode("chr12-afsd", true));
 
 /**
  * getRegularName
