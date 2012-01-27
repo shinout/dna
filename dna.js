@@ -250,10 +250,7 @@ dna.getRegularName = function(name) {
 dna.getChromList = function(code, fn) {
   var name = dna.CHROM_NAMES[code];
   if (!name) {
-    name = dna.CHROM_NAMES[dna.getChromCode(code)];
-    if (!name) {
-      throw new Error("code must be a number");
-    }
+    name = dna.getChromCode(code, true);
   }
 
   var list = [name,
