@@ -51,30 +51,222 @@ dna.complStrand = function(str, rev, rna) {
 
 
 /**
- * getRandomFragment
- * get random DNA fragment
- * @param number  len  : fragment length
- * @return string : DNA fragment
+ * getRandomSeq
+ * get random DNA sequence
+ * @param number  len  : sequence length
+ * @return string : DNA sequence
  */
-dna.getRandomFragment = function(len, rna) {
-  var fragment = '';
+dna.getRandomSeq = function(len, rna) {
+  var seq = '';
   for (var i=0; i<len; i++) {
     var p = Math.random();
     if (p > 0.75) {
-      fragment += 'A';
+      seq += 'A';
     }
     else if (p > 0.5) {
-      fragment += 'G';
+      seq += 'G';
     }
     else if (p > 0.25) {
-      fragment += (rna) ? 'U' : 'T';
+      seq += (rna) ? 'U' : 'T';
     }
     else {
-      fragment += 'C';
+      seq += 'C';
     }
   }
-  return fragment;
-}
+  return seq;
+};
+
+dna.getRandomFragment = dna.getRandomSeq;
+
+
+/**
+ * get a formatted region expression string
+ **/
+dna.getFormat = function(chr, start, end, strand) {
+  if (Array.isArray(chr)) {
+  return chr[0] + ':' + chr[1] + '-' + chr[2] + ((chr[3]) ? ("," + chr[3]) : '');
+  }
+  if (typeof chr == 'object') {
+  return chr.chr + ':' + chr.start + '-' + chr.end + ((chr.strand) ? ("," + chr.strand) : '');
+  }
+  return chr + ':' + start + '-' + end + ((strand) ? ("," + strand) : '');
+};
+
+
+/**
+ * get chromosome, start, end from the following format
+ * chr21:123456-4444444,+
+ * returns array [chr, start, end, strand]
+ **/
+dna.parseFormat = function(str, objFormat) {
+  var strand = str.slice(-2).charAt(1);
+  var a = str.slice(0, -2).split(':');
+  var startEnd = a.pop().split("-").map(function(v) { return Number(v) });
+  var chr = a.join(':');
+  startEnd.unshift(chr);
+  startEnd.push(strand);
+
+
+  return (objFormat) ? {
+    chr    : startEnd[0],
+    start  : startEnd[1],
+    end    : startEnd[2],
+    strand : startEnd[3],
+  } : startEnd;
+};
+
+
+/**
+ * write FASTA format to WritableStream
+ *
+ * rname   : reference name
+ * seq     : sequence
+ * wstream : default process.stdout
+ * num     : the length of each line
+ **/
+dna.writeFasta = function(rname, seq, wstream, num) {
+  if (!wstream) wstream = process.stdout;
+  num = dna.numberize(num, 50);
+  
+  wstream.write('>' + rname + '\n');
+  while (seq.length) {
+    wstream.write(seq.slice(0, num) + '\n');
+    seq = seq.slice(num);
+  }
+  wstream.write('\n');
+};
+
+
+/**
+ * N * 200
+ **/
+Object.defineProperty(dna, 'N200', {
+  value : (function() {
+    var ret = [];
+    for (var i=0; i<200; i++) ret.push('N');
+    return ret.join('');
+    })(),
+  writable: false
+});
+
+
+
+/**
+ * pad N till the total sequence length will be seq
+ * seq       : sequence
+ * len       : length (number)
+ * options   :
+ *   cutIfOver : if true && seq.length > len, cut the seq
+ *   left      : if true, set N to left.
+ **/
+dna.padN = function(seq, len, options) {
+  options || (options = {});
+  len = dna.numberize(len, 'length');
+  var till = len - seq.length;
+  if (till < 0) {
+    return (!!options.cutIfOver) ? seq.slice(0, len) : seq;
+  }
+
+  var Ns = '';
+
+  while (till > 0) {
+    if (till >= 200) {
+      Ns += dna.N200;
+      tills -= 200;
+    }
+    else {
+      Ns += dna.N200.slice(0, till);
+      till = 0;
+    }
+  }
+  return (options.left) ? Ns + seq : seq + Ns;
+};
+
+
+/**
+ * write FASTQ format to WritableStream
+ *
+ * name    : sequence name
+ * seq     : sequence
+ * qual    : base quality score (the length must be equal to that of seq)
+ * wstream : WritableStream. default process.stdout
+ **/
+dna.writeFastq = function(name, seq, qual, wstream) {
+  if (seq.length != qual.length) throw new Error('seq.length does not match with qual.length');
+  if (!wstream) wstream = process.stdout;
+  
+  wstream.write(['@'+name, seq, '+', qual].join('\n') + '\n');
+};
+
+
+
+
+/**
+ * 0-based coordinate to 1-based coordinate
+ **/
+dna.getPosLen = function(start, end) {
+  start = dna.numberize(start, "start");
+  end   = dna.numberize(end, "end");
+  var len = end - start;
+  var pos = start + 1;
+
+  if (pos <= 0) {
+    throw new Error('pos must be larger than 0. start: ' + start + ', end: ' + end);
+  }
+  if (len <= 0) {
+    throw new Error('length must be larger than 0. start: ' + start + ', end: ' + end);
+  }
+  return [pos, len];
+};
+
+
+/**
+ * 1-based coordinate to 0-based coordinate
+ **/
+dna.getStartEnd = function(pos, len) {
+  pos = dna.numberize(pos, "pos");
+  len = dna.numberize(len, "len");
+  var start = pos - 1;
+  var end   = start + len;
+
+  if (start < 0) {
+    throw new Error('start must be greater than 0 or 0. pos: ' + pos + ', len: ' + len);
+  }
+  if (end <= start) {
+    throw new Error('end must be less than start. pos: ' + pos + ', len: ' + len);
+  }
+  return [start, end];
+};
+
+
+/**
+ * numberize n. If NaN, throw error or set default
+ **/
+dna.numberize = function() {
+  var n = Array.prototype.shift.call(arguments);
+  var _default, name;
+
+  Array.prototype.forEach.call(arguments, function(v) {
+    if (typeof v == 'number') {
+      _default = v;
+    }
+    else if (typeof v == 'string') {
+      name = v;
+    }
+    return v;
+  });
+
+  var ret = Number(n);
+  if (n === false || isNaN(n)) {
+    if (_default == undefined) {
+      throw new Error((name ? name : n) + ' is NaN.');
+    }
+    else {
+      return _default;
+    }
+  }
+  return ret;
+};
 
 
 /**
@@ -277,194 +469,5 @@ dna.getChromList = function(code, fn) {
   return ret;
 };
 
-
-/**
- * get a formatted region expression string
- **/
-dna.getFormat = function(chr, start, end, strand) {
-  if (Array.isArray(chr)) {
-  return chr[0] + ':' + chr[1] + '-' + chr[2] + ((chr[3]) ? ("," + chr[3]) : '');
-  }
-  if (typeof chr == 'object') {
-  return chr.chr + ':' + chr.start + '-' + chr.end + ((chr.strand) ? ("," + chr.strand) : '');
-  }
-  return chr + ':' + start + '-' + end + ((strand) ? ("," + strand) : '');
-};
-
-
-/**
- * get chromosome, start, end from the following format
- * chr21:123456-4444444,+
- * returns array [chr, start, end, strand]
- **/
-dna.parseFormat = function(str, objFormat) {
-  var strand = str.slice(-2).charAt(1);
-  var a = str.slice(0, -2).split(':');
-  var startEnd = a.pop().split("-").map(function(v) { return Number(v) });
-  var chr = a.join(':');
-  startEnd.unshift(chr);
-  startEnd.push(strand);
-
-
-  return (objFormat) ? {
-    chr    : startEnd[0],
-    start  : startEnd[1],
-    end    : startEnd[2],
-    strand : startEnd[3],
-  } : startEnd;
-};
-
-
-/**
- * write FASTA format to WritableStream
- *
- * rname   : reference name
- * seq     : sequence
- * wstream : default process.stdout
- * num     : the length of each line
- **/
-dna.writeFasta = function(rname, seq, wstream, num) {
-  if (!wstream) wstream = process.stdout;
-  num = dna.numberize(num, 50);
-  
-  wstream.write('>' + rname + '\n');
-  while (seq.length) {
-    wstream.write(seq.slice(0, num) + '\n');
-    seq = seq.slice(50);
-  }
-  wstream.write('\n');
-};
-
-
-/**
- * N * 200
- **/
-Object.defineProperty(dna, 'N200', {
-  value : (function() {
-    var ret = [];
-    for (var i=0; i<200; i++) ret.push('N');
-    return ret.join('');
-    })(),
-  writable: false
-});
-
-
-
-/**
- * pad N till the total sequence length will be seq
- * seq       : sequence
- * len       : length (number)
- * options   :
- *   cutIfOver : if true && seq.length > len, cut the seq
- *   left      : if true, set N to left.
- **/
-dna.padN = function(seq, len, options) {
-  options || (options = {});
-  len = dna.numberize(len, 'length');
-  var till = len - seq.length;
-  if (till < 0) {
-    return (!!options.cutIfOver) ? seq.slice(0, len) : seq;
-  }
-
-  var Ns = '';
-
-  while (till > 0) {
-    if (till >= 200) {
-      Ns += dna.N200;
-      tills -= 200;
-    }
-    else {
-      Ns += dna.N200.slice(0, till);
-      till = 0;
-    }
-  }
-  return (options.left) ? Ns + seq : seq + Ns;
-};
-
-
-/**
- * write FASTQ format to WritableStream
- *
- * name    : sequence name
- * seq     : sequence
- * qual    : base quality score (the length must be equal to that of seq)
- * wstream : WritableStream. default process.stdout
- **/
-dna.writeFastq = function(name, seq, qual, wstream) {
-  if (seq.length != qual.length) throw new Error('seq.length does not match with qual.length');
-  if (!wstream) wstream = process.stdout;
-  
-  wstream.write(['@'+name, seq, '+', qual].join('\n') + '\n');
-};
-
-
-
-
-/**
- * 0-based coordinate to 1-based coordinate
- **/
-dna.getPosLen = function(start, end) {
-  start = dna.numberize(start, "start");
-  end   = dna.numberize(end, "end");
-  var len = end - start;
-  var pos = start + 1;
-
-  if (pos <= 0) {
-    throw new Error('pos must be larger than 0. start: ' + start + ', end: ' + end);
-  }
-  if (len <= 0) {
-    throw new Error('length must be larger than 0. start: ' + start + ', end: ' + end);
-  }
-  return [pos, len];
-};
-
-
-/**
- * 1-based coordinate to 0-based coordinate
- **/
-dna.getStartEnd = function(pos, len) {
-  pos = dna.numberize(pos, "pos");
-  len = dna.numberize(len, "len");
-  var start = pos - 1;
-  var end   = start + len;
-
-  if (start < 0) {
-    throw new Error('start must be greater than 0 or 0. pos: ' + pos + ', len: ' + len);
-  }
-  if (end <= start) {
-    throw new Error('end must be less than start. pos: ' + pos + ', len: ' + len);
-  }
-  return [start, end];
-};
-
-
-/**
- * numberize n. If NaN, throw error or set default
- **/
-dna.numberize = function() {
-  var n = Array.prototype.shift.call(arguments);
-  var _default, name;
-
-  Array.prototype.forEach.call(arguments, function(v) {
-    if (typeof v == 'number') {
-      _default = v;
-    }
-    else if (typeof v == 'string') {
-      name = v;
-    }
-    return v;
-  });
-
-  var ret = Number(n);
-  if (n === false || isNaN(n)) {
-    if (_default == undefined) {
-      throw new Error((name ? name : n) + ' is NaN.');
-    }
-    else {
-      return _default;
-    }
-  }
-  return ret;
-};
 
 module.exports = dna;
