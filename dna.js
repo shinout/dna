@@ -190,12 +190,14 @@ dna.padN = function(seq, len, options) {
  * seq     : sequence
  * qual    : base quality score (the length must be equal to that of seq)
  * wstream : WritableStream. default process.stdout
+ *
+ * returns true or false (writable or not)
  **/
 dna.writeFastq = function(name, seq, qual, wstream) {
   if (seq.length != qual.length) throw new Error('seq.length does not match with qual.length');
   if (!wstream) wstream = process.stdout;
   
-  wstream.write(['@'+name, seq, '+', qual].join('\n') + '\n');
+  return wstream.write(['@'+name, seq, '+', qual].join('\n') + '\n');
 };
 
 

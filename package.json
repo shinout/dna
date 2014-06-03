@@ -1,5 +1,5 @@
 { "name": "dna"
-, "version": "0.1.5"
+, "version": "0.1.6"
 , "main": "./dna.js"
 , "engines": { "node" : "*" }  
 

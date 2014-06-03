@@ -116,7 +116,7 @@ Writes fastq to **wstream**.
 
 **wstream** is a writable stream. By default, process.stdout.
 
-Returns nothing.
+Returns boolean (the wstream is writable or not).
 
     dna.writeFastq("title", "GCTTCAA", "IIHHHAI");
     // @title
