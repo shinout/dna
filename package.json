@@ -7,4 +7,5 @@
 , "description": "utility functions to handle DNA/RNA string data"
 
 , "keywords": ["DNA", "RNA", "FASTA", "sequence", "bioinformatics"]
+, "homepage": "https://github.com/shinout/dna"
 }
